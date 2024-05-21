@@ -87,7 +87,7 @@ read_excel("Data/Combined data sets.xlsx", sheet = "Splits") %>%
 
 ```
 
-## Supplementary Fig. 9: In vitro turnover numbers
+## Supplementary Fig. 10: In vitro turnover numbers
 
 ```{r}
 
