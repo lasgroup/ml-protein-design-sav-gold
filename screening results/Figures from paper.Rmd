@@ -1,0 +1,427 @@
+---
+title: "ML-guided ArM engineering"
+output: html_document
+---
+
+```{r warning=FALSE}
+
+#Load required packages
+
+library(tidyverse)
+library(data.table)
+library(readxl)
+library(ggbeeswarm)
+library(ggpubr)
+library(ggseqlogo)
+```
+
+# Main figures
+
+## Fig. 1c: Screening of 20 positions in Sav
+
+```{r warning=FALSE}
+
+#Load results
+SSM_screening <- read_excel("Combined data sets.xlsx", sheet = "SSM screening")
+
+#Calculate mean and sd of reference variant (Sav TFNAQ)
+
+mean_FQ <- SSM_screening %>%
+  filter(variant == "control_FQ") %>%
+  group_by(variant) %>%
+  summarise(mean = mean(norm_TFNAQ)) %>%
+  pull()
+
+sd_FQ <- SSM_screening %>%
+  filter(variant == "control_FQ") %>%
+  group_by(variant) %>%
+  summarise(sd = sd(norm_TFNAQ)) %>%
+  pull()
+
+#Plot results
+SSM_screening %>%
+  filter(norm_TFNAQ >= 0) %>%
+  mutate(variant = as_factor(variant),
+         variant = fct_recode(variant, "ref" = "control_FQ", "ev" = "control_empty"),
+         variant = fct_relevel(variant, "ev", "ref", "47", "48", "49", "86", "87", "88", "110", "111", "112", "113", "114", "115", "117", "118", "119", "120", "121", "122", "123", "124")) %>%
+ggplot(aes(variant, norm_TFNAQ)) +
+  geom_hline(yintercept = (mean_FQ + 1*sd_FQ), linetype = "dashed", colour = "grey70") +
+  geom_hline(yintercept = (mean_FQ - 1*sd_FQ), linetype = "dashed", colour = "grey70") +
+  geom_jitter(width = 0.2, alpha = 0.8, shape = 16, size = 1) +
+  scale_y_continuous(limits = c(0, 2.2), expand = expansion(mult = c(0, 0.1))) +
+  labs(y = "Relative cell-specific activity", x = "Randomized position") +
+  theme_classic() +
+  theme(axis.title.y = element_text(margin = margin(0,5,0,0,"pt")),
+        axis.title.x = element_text(margin = margin(5,0,0,0,"pt")),
+        axis.title = element_text(size = 7, colour = "black"),
+        axis.text = element_text(colour = "black", size = 7),
+        axis.ticks = element_line(colour = "black"),
+        legend.position = "None")
+
+```
+
+## Fig. 1e: Effect of the mutational load on the activity distribution of ArM libraries
+
+```{r warning=FALSE}
+
+#Load results
+mutational_load <- read_excel("Combined data sets.xlsx", sheet = "Mutational load")
+
+#Plot results
+mutational_load %>%
+  filter(OD > 0.05) %>%
+  mutate(variant = fct_recode(variant, "ev" = "control_empty",
+                              "ref" = "control_FQ",
+                              "2/5" = "Double",
+                              "3/5" = "Triple",
+                              "4/5" = "Quadruple",
+                              "5/5" = "Quintuple"),
+         variant = fct_relevel(variant, "4/5", "5/5", after = Inf)) %>%
+ggplot(aes(variant, norm_TFNAQ)) +
+  geom_jitter(width = 0.2, alpha = 0.8, shape = 16, size = 1) +
+  scale_y_continuous(limits = c(0, 2), expand = expansion(mult = c(0, 0.05))) +
+  labs(y = "Relative cell-specific activity", x = "Mutational load") +
+  theme_classic() +
+  theme(axis.title.y = element_text(margin = margin(0,5,0,0,"pt")),
+        axis.title.x = element_text(margin = margin(5,0,0,0,"pt")),
+        axis.title = element_text(size = 7, colour = "black"),
+        axis.text = element_text(colour = "black", size = 7),
+        text = element_text(colour = "black", size = 7),
+        axis.ticks = element_line(colour = "black"))
+
+```
+
+## Fig. 2c: Screening results as scatter plot
+
+```{r warning=FALSE}
+
+#Load data
+initial_screening <- read_excel("Combined data sets.xlsx", sheet = "Initial screening")
+
+#Controls
+p1 <- initial_screening %>%
+  filter(type != "mutant",
+         OD >= 0.05) %>%
+  mutate(type = fct_recode(type, "Empty vector" = "control_empty",
+                           "Reference" = "control_TFNAQ")) %>%
+  ggplot(aes(y = norm_TFNAQ, x = type)) +
+  geom_jitter(shape = 16, size = 0.5, alpha = 0.8) +
+  stat_summary(fun.data = mean_sdl, fun.args = list(mult = 1), geom = "errorbar", width = 0.3, col = "red") +
+  scale_y_continuous(limits = c(0, 3.8), expand = expansion(mult = c(0, 0))) +
+  labs(y = "Relative cell-specific activity", x = NULL, legend = "") +
+  theme_classic() + 
+  theme(text = element_text(size = 7, colour = "black"), 
+        axis.text = element_text(size = 7, colour = "black"),
+        axis.ticks.x = element_blank(), 
+        plot.margin = margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+        axis.title.y = element_text(margin = margin(0,5,0,0,"pt")),
+        axis.text.x = element_text(),
+        legend.position = "none")
+
+
+#Library
+p2 <- initial_screening %>%
+  filter(type == "mutant",
+         OD >= 0.05) %>%
+  mutate(type = fct_recode(type, "Library" = "mutant")) %>%
+  ggplot(aes(y = norm_TFNAQ, x = type)) +
+  geom_jitter(shape = 16, size = 0.5, alpha = 0.8) +
+  scale_y_continuous(limits = c(0, 3.8), expand = expansion(mult = c(0, 0))) +
+  labs(y = "Relative cell-specific activity", x = NULL, legend = "") +
+  theme_classic() + 
+  theme(text = element_text(size = 7, colour = "black"), 
+        axis.text.x = element_text(size = 7, colour = "black"),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(), 
+        axis.line.y = element_blank(),
+        plot.margin = margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+        axis.title.y = element_blank())
+
+#Plot library and controls next to each other
+ggarrange(p1, p2, nrow = 1, ncol = 2, widths = c(1, 2))
+
+
+
+```
+
+## Fig. 2d: Frequency of amino acids at the five randomized positions
+
+```{r}
+
+#Sequence logo
+
+read_excel("Combined data sets.xlsx", sheet = "Initial screening") %>%
+  filter(type == "mutant",
+         OD >= 0.05) %>%
+  distinct(variant) %>%
+  ggseqlogo(method = "probability") +
+  labs(x = "Sav position") +
+  theme(text = element_text(size = 7, colour = "black"),
+        axis.title.y = element_text(margin = margin(0,15,0,0,"pt")),
+        axis.title.x = element_text(margin = margin(10,0,0,0,"pt")),
+        axis.title = element_text(colour = "black", size = 7),
+        axis.text = element_text(colour = "black", size = 7),
+        axis.text.y = element_text(margin = margin(0,3,0,0,"pt")),
+        axis.line.y = element_line(),
+        axis.ticks.y = element_line())
+
+
+```
+
+## Fig. 4a: Activity distribution across screening rounds
+
+```{r warning=FALSE}
+
+#Load data
+all_rounds <- read_excel("Combined data sets.xlsx", sheet = "All rounds")
+
+#Most active variants per round
+all_rounds_top20 <- all_rounds %>%
+  mutate(round = fct_recode(round, "Initial library" = "Double mutants")) %>%
+  group_by(round) %>%
+  slice_max(order_by = norm_TSNAK_mean, n = 20) %>%
+  ungroup()
+
+#Plot all screening results
+all_rounds %>%
+  mutate(round = fct_recode(round, "Initial library" = "Double mutants"),
+         round = fct_relevel(round, "Exploitation phase", after = Inf)) %>%
+  ggplot(aes(y = norm_TFNAQ_mean, x = round)) +
+  geom_violin(aes(fill = round, colour = round)) +
+  geom_jitter(data = all_rounds_top20, aes(y = norm_TFNAQ_mean, x = round), shape = 18, size = 1.5, alpha = 1, width = 0.2) +
+  scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.1))) +
+  scale_fill_manual(values = c("#0177B8", "#0EB6EB", "#00A077")) +
+  scale_color_manual(values = c("#0177B8", "#0EB6EB", "#00A077")) +
+  labs(y = "Cell-specific activity relative to Sav TFNAQ", x = NULL, legend = "") +
+  theme_classic() + 
+  theme(text = element_text(size = 7, colour = "black"), 
+        axis.text = element_text(size = 7, colour = "black"),
+        axis.ticks.x = element_blank(),
+        axis.ticks.y = element_line(colour = "black"),
+        plot.margin = margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+        axis.title.y = element_text(margin = margin(0,5,0,0,"pt")),
+        axis.text.x = element_text(),
+        legend.position = "none")
+
+
+
+```
+
+## Fig. 4b: Hit rate across screening rounds
+
+```{r}
+
+#Load screening results in code chunk above
+
+#Calculate hit rate
+hitrate <- tibble(round = c("Initial library", "Exploration phase", "Exploitation phase"),
+                  rate = c(nrow(filter(all_rounds, round == "Initial library", norm_TFNAQ_mean > 1))/nrow(filter(all_rounds, round == "Initial library"))*100,
+                           nrow(filter(all_rounds, round == "Exploration phase", norm_TFNAQ_mean > 1))/nrow(filter(all_rounds, round == "Exploration phase"))*100,
+                           nrow(filter(all_rounds, round == "Exploitation phase", norm_TFNAQ_mean > 1))/nrow(filter(all_rounds, round == "Exploitation phase"))*100)) %>%
+  mutate(round = factor(round, levels = c("Initial library", "Exploration phase", "Exploitation phase")))
+
+
+#Plot hit rate
+hitrate %>%
+  ggplot(aes(y = rate, x = round, fill = round)) +
+  geom_col() +
+  scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.1)),
+                     breaks = seq(0, 40, 5)) +
+  scale_fill_manual(values = c("#0177B8", "#0EB6EB", "#00A077")) +
+  labs(y = "Hit rate in %", x = NULL) +
+  theme_classic() + 
+  theme(text = element_text(size = 7, colour = "black"), 
+        axis.text = element_text(size = 7, colour = "black"),
+        axis.ticks.x = element_blank(),
+        axis.ticks.y = element_line(colour = "black"),
+        plot.margin = margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+        axis.title.y = element_text(margin = margin(0,5,0,0,"pt")),
+        axis.text.x = element_text(),
+        legend.position = "none")
+
+```
+
+## Fig. 4d: Hit validation
+
+```{r warning=FALSE}
+
+
+read_excel("Combined data sets.xlsx", sheet = "Hit validation") %>%
+    mutate(order = case_when(mutant %in% c("TALFQ", "QWNAS", "TAQAL", "TFGWR", "RTNAL", "TGFLQ") ~ 5,
+                           mutant %in% c("CLPWG", "CIPGI", "MNRDI", "AANYM", "TSHKW", "TFFWG", "SGHLQ", "TFQPQ") ~ 25,
+                           mutant %in% c("TALYQ", "QPFRV", "CLPPG", "CTNLV", "CANYV", "AAAMM") ~ 125,
+                           mutant %in% c("Empty vector", "TSNAK (wt)", "TFNAQ") ~ 1),
+         mutant = fct_reorder(mutant, .x = norm_TSNAK*order, .fun = mean),
+         round = factor(round),
+         round = fct_relevel(round, "Exploitation phase", "Exploration phase", "Initial library", "Controls"),
+         mutant = fct_recode(mutant, "Empty vector" = "control_empty",
+                             "TSNAK (wt)" = "control_wt")) %>%
+  filter(!mutant %in% c("QPFRV", "SGHLQ", "TFQPQ", "AANYM", "RTNAL")) %>%
+ggplot(aes(norm_TFNAQ, mutant, fill = round)) +
+  stat_summary(fun = "mean", geom = "bar") +
+  stat_summary(fun.data = mean_sdl, fun.args = list(mult = 1), geom = "errorbar", width = 0.3) +
+  geom_point(shape = 16, alpha = 0.4) +
+  scale_x_continuous(expand = expansion(mult = c(0, 0.05)),
+                     sec.axis = sec_axis(~ . * 6.064, name = "Cell-specific activity relative to Sav TSNAK (wild type)")) +
+  labs(x = "Cell-specific activity relative to Sav TFNAQ (reference)", y = "Sav mutant", fill = "Screening round") +
+  scale_fill_manual(values = c("#00A077", "#0EB6EB", "#0177B8", "grey")) +
+  theme_classic() +
+  theme(text = element_text(size = 7, colour = "black"), 
+        axis.text = element_text(size = 7, colour = "black"),
+        plot.margin = margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+        axis.title.x = element_text(margin = margin(5,0,0,0,"pt")),
+        axis.title.y = element_text(margin = margin(0,5,0,0,"pt")),
+        axis.text.x = element_text(),
+        axis.ticks = element_line(colour = "black"))
+
+
+
+```
+
+## Fig. 5a+b: Clusterings
+
+```{r}
+
+#Load t-SNE clustering
+clustering <- fread("coordinates_embedding150.csv")
+
+#Add measurements
+clustering_meas_add <- clustering %>%
+  left_join(all_rounds, by = "variant") %>%
+  filter(!is.na(norm_TFNAQ_mean)) %>%
+  arrange(norm_TFNAQ_mean) %>%
+  mutate(log10 = log10(norm_TSNAK_mean),
+         round.y = fct_recode(round.y, "Initial library" = "Double mutants"))
+
+#Representative samples of variants that were not tested
+clustering_nan <- clustering %>%
+  filter(round == "nan")
+
+#Clustering with color indicating the activity
+clustering_meas_add %>%
+  ggplot(aes(x, y, colour = log10)) +
+  geom_point(data = clustering_nan, aes(x, y), colour = "grey90", shape = 16, size = 0.1, alpha = 0.4) +
+  geom_point(shape = 16, size = 1) +
+  scale_colour_viridis_c(option = "B") +
+  theme_void() +
+  theme(legend.position = "none")
+
+
+#Clustering with color indicating the screening round - all rounds
+clustering_meas_add %>%
+  mutate(round.y = fct_relevel(round.y, "Initial library", "Exploration phase", "Exploitation phase")) %>%
+  arrange(round.y) %>%
+  ggplot(aes(x, y, colour = round.y)) +
+  geom_point(data = clustering_nan, aes(x, y), colour = "grey90", shape = 16, size = 0.05, alpha = 0.4) +
+  geom_point(shape = 16, size = 0.8) +
+  scale_color_manual(values = c("#0177B8", "#0EB6EB", "#00A077")) +
+  #geom_point(data = clustering_top, aes(x, y), colour = "red") +
+  theme_void() +
+  theme(legend.position = "none")
+
+
+#Clustering with color indicating the screening round - first and second round
+clustering_meas_add %>%
+  mutate(round.y = fct_relevel(round.y, "Initial library", "Exploration phase", "Exploitation phase")) %>%
+  arrange(round.y) %>%
+  filter(round.y %in% c("Initial library", "Exploration phase")) %>%
+  ggplot(aes(x, y, colour = round.y)) +
+  geom_point(data = clustering_nan, aes(x, y), colour = "grey90", shape = 16, size = 0.05, alpha = 0.4) +
+  geom_point(shape = 16, size = 0.8) +
+  scale_color_manual(values = c("#0177B8", "#0EB6EB", "#00A077")) +
+  #geom_point(data = clustering_top, aes(x, y), colour = "red") +
+  theme_void() +
+  theme(legend.position = "none")
+
+#Clustering with color indicating the screening round - first round
+clustering_meas_add %>%
+  mutate(round.y = fct_relevel(round.y, "Initial library", "Exploration phase", "Exploitation phase")) %>%
+  arrange(round.y) %>%
+  filter(round.y == "Initial library") %>%
+  ggplot(aes(x, y, colour = round.y)) +
+  geom_point(data = clustering_nan, aes(x, y), colour = "grey90", shape = 16, size = 0.05, alpha = 0.4) +
+  geom_point(shape = 16, size = 0.8) +
+  scale_color_manual(values = c("#0177B8", "#0EB6EB", "#00A077")) +
+  #geom_point(data = clustering_top, aes(x, y), colour = "red") +
+  theme_void() +
+  theme(legend.position = "none")
+
+
+```
+
+## Fig. 5c: Effect of data set size and sampling strategy
+
+```{r warning=FALSE}
+
+#Size of initial data set (including replicates)
+initial_data <- 2992
+
+#Size of exploration data set (including replicates)
+exploration_data <- 564
+
+data_size <- tibble(x = c(1:11),
+                    size = c(0.1*initial_data, 0.2*initial_data, 0.3*initial_data, 0.4*initial_data, 0.5*initial_data,
+                             0.6*initial_data, 0.7*initial_data, 0.8*initial_data, 0.9*initial_data, initial_data,
+                             initial_data + exploration_data))
+
+
+data_size %>%
+  ggplot(aes(x = x, y = size)) +
+  geom_col(position = "identity", fill = "grey90", col = "grey90", width = 0.6) +
+  labs(y = "Size of training data set", x = NULL) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
+  theme_classic() +
+  theme(axis.title.y = element_text(margin = margin(0,5,0,0,"pt")),
+        axis.title.x = element_blank(),
+        axis.title = element_text(size = 7, colour = "black"),
+        axis.text = element_text(colour = "black", size = 7),
+        axis.ticks = element_line(colour = "black"))
+
+```
+
+# Analyses
+
+## Hamming distance between variants in the initial library
+
+```{r warning=FALSE}
+
+library(stringdist)
+
+
+#Calculate Hamming distances between unique variants from 5 positions screening
+distinct_mutants <- read_excel("Data/Combined data sets.xlsx", sheet = "All rounds") %>%
+  filter(round == "Initial library") %>%
+  distinct(variant) %>%
+  pull(variant)
+
+hamming_dist <- stringdistmatrix(distinct_mutants, method = "hamming")
+
+#Function for converting dist object to data frame
+dist_to_df <- function(inDist) {
+  if (class(inDist) != "dist") stop("wrong input type")
+  A <- attr(inDist, "Size")
+  B <- if (is.null(attr(inDist, "Labels"))) sequence(A) else attr(inDist, "Labels")
+  if (isTRUE(attr(inDist, "Diag"))) attr(inDist, "Diag") <- FALSE
+  if (isTRUE(attr(inDist, "Upper"))) attr(inDist, "Upper") <- FALSE
+  data.frame(
+    row = B[unlist(lapply(sequence(A)[-1], function(x) x:A))],
+    col = rep(B[-length(B)], (length(B)-1):1),
+    value = as.vector(inDist))
+}
+
+#Create data frame with distances and mutants
+mutant_numbered <- tibble(mutant = distinct_mutants,
+                          number = 1:length(distinct_mutants))
+
+hamming_ana <- dist_to_df(hamming_dist) %>%
+  mutate(value = factor(value)) %>%
+  left_join(mutant_numbered %>% rename(mutant_row = mutant), by = c("row" = "number")) %>%
+  left_join(mutant_numbered %>% rename(mutant_col = mutant), by = c("col" = "number"))
+
+
+#Calculate average Hamming distance
+mean(as.numeric(hamming_ana$value))
+
+```
+
+## 
