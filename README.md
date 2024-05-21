@@ -1,7 +1,7 @@
 Content: Enhanced Sequence-Activity Mapping and Evolution of Artificial Metalloenzymes by Active Learning
 --------
 
-This repository contains scripts for analysis, preparation and reporting of results from a study published in  2024 ACS Central Science publication:
+This repository contains scripts for analysis, preparation and reporting of results from a study published in ACS Central Science journal:
 
 <img src="banner.png" alt="Repository Icon" width="1000">
 
@@ -10,7 +10,8 @@ Sven Panke, Thomas R. Ward, Andreas Krause, and Markus Jeschek`
 
 **Title**: `Enhanced Sequence-Activity Mapping and Evolution of Artificial Metalloenzymes by Active Learning`
 
-**Journal:** `ACS Central Science 2024`
+**Journal:** `ACS Central Science`
+**Year:** 2024
 
 
 For the full-paper please refer to the [link](https://www.biorxiv.org/content/10.1101/2024.02.06.579157v1.full.pdf). 
