@@ -1,0 +1,117 @@
+---
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r}
+
+#Load required packages
+library(tidyverse) 
+library(readxl)
+
+```
+
+# Supplementary figures
+
+## Supplementary Fig. 2: Automated Kovac's assay
+
+```{r}
+
+plate1 <- read_excel("Data/Combined data sets.xlsx", sheet = "Kovac plate 1")
+
+plate2 <- read_excel("Data/Combined data sets.xlsx", sheet = "Kovac plate 2")
+
+#Plot standard curve - full range 
+plate2 %>% 
+  ggplot(aes(Concentration, Mean)) + 
+  geom_point(alpha = 0.6, shape = 16) + 
+  scale_x_continuous(limits = c(0, 1000), expand = expansion(mult = c(0.03, 0.03)), breaks = seq(0, 1000, 100)) + 
+  scale_y_continuous(limits = c(0, 2.1), expand = expansion(mult = 0)) + 
+  labs(x = "Indole concentration in ÂµM", y = "Absorbance at 540 nm") + 
+  theme_classic() + theme(axis.title.x = element_text(margin = margin(5,0,0,0,"pt")), 
+                          axis.title.y = element_text(margin = margin(0,5,0,0,"pt")), 
+                          axis.title = element_text(colour = "black", size = 7), 
+                          axis.text = element_text(colour = "black", size = 7), 
+                          axis.ticks = element_line(colour = "black"))
+
+
+#Correlation between plate 1 and 2 
+plate1 %>% 
+  left_join(plate2, by = "Well") %>% 
+  ggplot(aes(Mean.x, Mean.y)) + 
+  geom_point() + 
+  scale_x_continuous(limits = c(0, 2.1), 
+                     expand = expansion(mult = c(0, 0))) + 
+  scale_y_continuous(limits = c(0, 2.1), 
+                     expand = expansion(mult = 0)) + coord_fixed() + 
+  labs(x = "Absorbance plate 1", y = "Absorbance plate 2") + 
+  theme_bw() + 
+  theme(axis.title.x = element_text(margin = margin(5,0,0,0,"pt")), 
+        axis.title.y = element_text(margin = margin(0,5,0,0,"pt")), 
+        axis.title = element_text(colour = "black", size = 7), 
+        axis.text = element_text(colour = "black", size = 7), 
+        axis.ticks = element_line(colour = "black"))
+
+```
+
+## Supplementary Fig. 6: Predictions vs. measurements
+
+```{r}
+
+
+#Four exemplary splits
+read_excel("Data/Combined data sets.xlsx", sheet = "Splits") %>% 
+  filter(split %in% c(4, 6, 3, 7)) %>% 
+  mutate(split = factor(split, levels = c("4", "7", "3", "6"))) %>% 
+  ggplot(aes(truth, pred)) + 
+  geom_point(shape = 16, alpha = 1, size = 1) + 
+  geom_errorbar(aes(ymin = pred - std, ymax = pred + std), width = 0.02, linewidth = 0.25) + 
+  facet_wrap(vars(split), nrow = 2, ncol = 2) + 
+  scale_x_continuous(limits = c(-1, 1.25)) + 
+  scale_y_continuous(limits = c(-1, 1.25)) + 
+  geom_abline(intercept = 0, slope = 1) + 
+  labs(x = "Measured log10 cell-specific activity", y = "Predicted log10 cell-specific activity") + 
+  theme_bw() + 
+  theme(text = element_text(size = 7, colour = "black"), 
+        axis.text = element_text(size = 7, colour = "black"), 
+        plot.margin = margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+        panel.grid = element_blank(), 
+        axis.title.x = element_text(margin = margin(5,0,0,0,"pt")), 
+        axis.title.y = element_text(margin = margin(0,5,0,0,"pt")), 
+        axis.text.x = element_text(), 
+        axis.ticks = element_line(colour = "black"), 
+        strip.background = element_blank(), 
+        strip.text = element_blank())
+
+
+```
+
+## Supplementary Fig. 9: In vitro turnover numbers
+
+```{r}
+
+invitro <- read_excel("Data/Combined data sets.xlsx", sheet = "In vitro")
+
+invitro %>% 
+  filter(variant != "MNRDI") %>% 
+  mutate(variant = fct_reorder(variant, TON), 
+         variant = fct_relevel(variant, "cofactor", "TSNAK", "TFNAQ"), 
+         group = ifelse(variant %in% c("cofactor", "TSNAK", "TFNAQ"), "control", "hits")) %>% 
+  ggplot(aes(variant, TON, fill = group)) + 
+  stat_summary(fun = "mean", geom = "bar") + 
+  stat_summary(fun.data = mean_sdl, fun.args = list(mult = 1), geom = "errorbar", width = 0.3) + 
+  geom_point(shape = 16, alpha = 0.4) + 
+  scale_y_continuous(expand = expansion(mult = c(0, 0.05))) + 
+  scale_fill_manual(values = c("grey", "royalblue")) + 
+  labs(y = "TON", x = "Sav mutant") + theme_classic() + 
+  theme(text = element_text(size = 7, colour = "black"), 
+        axis.text = element_text(size = 7, colour = "black"), 
+        plot.margin = margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+        axis.title.x = element_text(margin = margin(5,0,0,0,"pt")), 
+        axis.title.y = element_text(margin = margin(0,5,0,0,"pt")), 
+        axis.text.x = element_text(), 
+        axis.ticks = element_line(colour = "black"), 
+        legend.position = "top")
+
+```
