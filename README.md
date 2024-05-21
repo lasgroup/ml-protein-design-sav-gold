@@ -83,8 +83,15 @@ The plots for the publication and statistical analysis can be found in the subfo
 Citation
 ---------
 To cite this work, please use 
-`@Vornholt`
-
+```
+@article{Vornholt2024,
+	author = {Vornholt*, Tobias and Mutn{\'y}*, Mojm{\'\i}r and Schmidt, Gregor and Schellhaas, Christian and Tachibana, Ryo and Panke, Sven and Ward, Thomas R. and Krause, Andreas and Jeschek, Markus},
+	journal = {ACS Central Science},
+	title = {{Enhanced Sequence-Activity Mapping and Evolution of Artificial Metalloenzymes by Active Learning}},
+	url = {https://www.biorxiv.org/content/10.1101/2024.02.06.579157v1.full.pdf},
+	year = {2024}
+}
+```
 Authors & Contact
 -------
 This repository was assembled by Mojmir Mutny (ETH Zuerich) and Tobias Vornholt (ETH Zuerich and University of Basel).
