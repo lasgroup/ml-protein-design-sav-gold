@@ -22,7 +22,7 @@ library(ggseqlogo)
 ```{r warning=FALSE}
 
 #Load results
-SSM_screening <- read_excel("Data/Combined data sets.xlsx", sheet = "SSM screening")
+SSM_screening <- read_excel("Combined data sets.xlsx", sheet = "SSM screening")
 
 #Calculate mean and sd of reference variant (Sav TFNAQ)
 
@@ -65,7 +65,7 @@ ggplot(aes(variant, norm_TFNAQ)) +
 ```{r warning=FALSE}
 
 #Load results
-mutational_load <- read_excel("Data/Combined data sets.xlsx", sheet = "Mutational load")
+mutational_load <- read_excel("Combined data sets.xlsx", sheet = "Mutational load")
 
 #Plot results
 mutational_load %>%
@@ -96,7 +96,7 @@ ggplot(aes(variant, norm_TFNAQ)) +
 ```{r warning=FALSE}
 
 #Load data
-initial_screening <- read_excel("Data/Combined data sets.xlsx", sheet = "Initial screening")
+initial_screening <- read_excel("Combined data sets.xlsx", sheet = "Initial screening")
 
 #Controls
 p1 <- initial_screening %>%
@@ -150,7 +150,7 @@ ggarrange(p1, p2, nrow = 1, ncol = 2, widths = c(1, 2))
 
 #Sequence logo
 
-read_excel("Data/Combined data sets.xlsx", sheet = "Initial screening") %>%
+read_excel("Combined data sets.xlsx", sheet = "Initial screening") %>%
   filter(type == "mutant",
          OD >= 0.05) %>%
   distinct(variant) %>%
@@ -173,7 +173,7 @@ read_excel("Data/Combined data sets.xlsx", sheet = "Initial screening") %>%
 ```{r warning=FALSE}
 
 #Load data
-all_rounds <- read_excel("Data/Combined data sets.xlsx", sheet = "All rounds")
+all_rounds <- read_excel("Combined data sets.xlsx", sheet = "All rounds")
 
 #Most active variants per round
 all_rounds_top20 <- all_rounds %>%
@@ -246,7 +246,7 @@ hitrate %>%
 ```{r warning=FALSE}
 
 
-read_excel("Data/Combined data sets.xlsx", sheet = "Hit validation") %>%
+read_excel("Combined data sets.xlsx", sheet = "Hit validation") %>%
     mutate(order = case_when(mutant %in% c("TALFQ", "QWNAS", "TAQAL", "TFGWR", "RTNAL", "TGFLQ") ~ 5,
                            mutant %in% c("CLPWG", "CIPGI", "MNRDI", "AANYM", "TSHKW", "TFFWG", "SGHLQ", "TFQPQ") ~ 25,
                            mutant %in% c("TALYQ", "QPFRV", "CLPPG", "CTNLV", "CANYV", "AAAMM") ~ 125,
@@ -283,7 +283,7 @@ ggplot(aes(norm_TFNAQ, mutant, fill = round)) +
 ```{r}
 
 #Load t-SNE clustering
-clustering <- fread("Data/coordinates_embedding150.csv")
+clustering <- fread("coordinates_embedding150.csv")
 
 #Add measurements
 clustering_meas_add <- clustering %>%
