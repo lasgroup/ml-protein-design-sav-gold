@@ -1,1 +1,0 @@
-The file "NGS analysis.R" contains the code used to analyze Illumina sequencing results and determine which mutants were present in the screening. This code is specific to this screening campaign (i.e., it extracts mutations in streptavidin at the five targeted positions). 
