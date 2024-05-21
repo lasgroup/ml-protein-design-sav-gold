@@ -71,7 +71,7 @@ cd experiments/streptavidin
 mkdir results_strep
 cd bechmark_run
 mkdir job_files_exp
-python benchmark_run/run_final_aa.py`
+python benchmark_run/run_final_aa.py
 sh job_files_exp/job0.sh
 ```
 
